@@ -7,7 +7,7 @@
 #define DEVICE_NAME "LINE Things Trial ESP32"
 
 // User service UUID: Change this to your generated service UUID
-#define USER_SERVICE_UUID "547c26c2-fb1c-4b74-8a3f-a28d20b131f1"
+#define USER_SERVICE_UUID "91E4E176-D0B9-464D-9FE4-52EE3E9F1552"
 // User service characteristics
 #define WRITE_CHARACTERISTIC_UUID "E9062E71-9E62-4BC6-B0D3-35CDCD9B027B"
 #define NOTIFY_CHARACTERISTIC_UUID "62FBD229-6EDD-4D1A-B554-5C4E1BB29169"
@@ -26,8 +26,6 @@ BLEService* psdiService;
 BLECharacteristic* psdiCharacteristic;
 BLECharacteristic* writeCharacteristic;
 BLECharacteristic* notifyCharacteristic;
-//堤追加
-BLECharacteristic* readCharacteristic;
 
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
@@ -74,9 +72,6 @@ void setup() {
   Serial.println("Ready to Connect");
 }
 
-//堤追加
-int btnCount = 0;
-
 void loop() {
   uint8_t btnValue;
 
@@ -86,13 +81,6 @@ void loop() {
     notifyCharacteristic->setValue(&btnValue, 1);
     notifyCharacteristic->notify();
     delay(20);
-
-    //ここから
-    if (btnValue) {
-      btnCount++;
-      readCharacteristic->setValue(btnCount);
-    }
-    //ここまで
   }
   // Disconnection
   if (!deviceConnected && oldDeviceConnected) {
@@ -124,10 +112,7 @@ void setupServices(void) {
   ble9202->setNotifications(true);
   ble9202->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
   notifyCharacteristic->addDescriptor(ble9202);
-  //堤追加
-  readCharacteristic = userService->createCharacteristic(READ_CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_READ);
-  readCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED);
-  readCharacteristic->setValue(0); // とりあえず 0 で初期化
+
   // Setup PSDI Service
   psdiService = thingsServer->createService(PSDI_SERVICE_UUID);
   psdiCharacteristic = psdiService->createCharacteristic(PSDI_CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_READ);
