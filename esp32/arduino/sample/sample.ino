@@ -11,6 +11,7 @@
 // User service characteristics
 #define WRITE_CHARACTERISTIC_UUID "E9062E71-9E62-4BC6-B0D3-35CDCD9B027B"
 #define NOTIFY_CHARACTERISTIC_UUID "62FBD229-6EDD-4D1A-B554-5C4E1BB29169"
+#define READ_CHARACTERISTIC_UUID "4288b041-d438-41af-832e-032ff468b2de"
 
 // PSDI Service UUID: Fixed value for Developer Trial
 #define PSDI_SERVICE_UUID "E625601E-9E55-4597-A598-76018A0D293D"
@@ -26,6 +27,8 @@ BLEService* psdiService;
 BLECharacteristic* psdiCharacteristic;
 BLECharacteristic* writeCharacteristic;
 BLECharacteristic* notifyCharacteristic;
+//堤追加
+BLECharacteristic* readCharacteristic;
 
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
@@ -72,6 +75,9 @@ void setup() {
   Serial.println("Ready to Connect");
 }
 
+//堤追加
+int btnCount = 0;
+
 void loop() {
   uint8_t btnValue;
 
@@ -81,6 +87,13 @@ void loop() {
     notifyCharacteristic->setValue(&btnValue, 1);
     notifyCharacteristic->notify();
     delay(20);
+
+    //ここから
+    if (btnValue) {
+      btnCount++;
+      readCharacteristic->setValue(btnCount);
+    }
+    //ここまで
   }
   // Disconnection
   if (!deviceConnected && oldDeviceConnected) {
@@ -112,6 +125,11 @@ void setupServices(void) {
   ble9202->setNotifications(true);
   ble9202->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
   notifyCharacteristic->addDescriptor(ble9202);
+
+  //堤追加
+  readCharacteristic = userService->createCharacteristic(READ_CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_READ);
+  readCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED);
+  readCharacteristic->setValue(0); // とりあえず 0 で初期化
 
   // Setup PSDI Service
   psdiService = thingsServer->createService(PSDI_SERVICE_UUID);
